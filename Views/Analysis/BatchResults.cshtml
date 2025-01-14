@@ -1,0 +1,81 @@
+﻿@model List<BellPepperMVC.Models.BatchUploadResult>
+<div class="container mx-auto p-4">
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white shadow-md rounded-lg p-6">
+            <h2 class="text-2xl font-bold mb-6">Batch Analysis Results</h2>
+
+            <div class="mb-4">
+                <p class="text-gray-600">
+                    Total Files: @Model.Count
+                    <span class="mx-2">|</span>
+                    Successful: @Model.Count(r => r.Success)
+                    <span class="mx-2">|</span>
+                    Failed: @Model.Count(r => !r.Success)
+                </p>
+            </div>
+
+            <div class="space-y-4">
+                @foreach (var result in Model)
+                {
+                    <div class="border rounded-lg p-4 @(result.Success ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50")">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h3 class="font-semibold">@result.FileName</h3>
+                                @if (result.Success)
+                                {
+                                    <p class="text-green-600">Analysis completed successfully</p>
+                                    <div class="mt-2">
+                                        <a href="@Url.Action("Details", new { id = result.AnalysisId })"
+                                           class="text-blue-500 hover:text-blue-700">
+                                            View Analysis Results
+                                        </a>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <p class="text-red-600">@result.Error</p>
+                                }
+                            </div>
+                            @if (result.Success)
+                            {
+                                <div class="flex items-center">
+                                    <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="flex items-center">
+                                    <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="mt-6 flex justify-between">
+                <a asp-action="BatchUpload" class="text-blue-500 hover:text-blue-700">
+                    Upload More Images
+                </a>
+                @if (Model.Any(r => r.Success))
+                {
+                    <div>
+                        <a href="#" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2">
+                            Download All Results
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Add any JavaScript for interactivity here
+    </script>
+}

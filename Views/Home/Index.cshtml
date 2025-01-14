@@ -1,0 +1,111 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="container mx-auto px-4 py-8">
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <!-- Dashboard for logged-in users -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <!-- Quick Upload Card -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-xl font-bold mb-4">Quick Analysis</h3>
+                <p class="text-gray-600 mb-4">Upload a bell pepper image for instant analysis</p>
+                <a href="@Url.Action("Upload", "Analysis")" 
+                   class="inline-block bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded">
+                    Start Analysis
+                </a>
+            </div>
+
+            <!-- Batch Upload Card -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-xl font-bold mb-4">Batch Analysis</h3>
+                <p class="text-gray-600 mb-4">Analyze multiple bell pepper images at once</p>
+                <a href="@Url.Action("BatchUpload", "Analysis")" 
+                   class="inline-block bg-green-500 hover:bg-green-600 text-white font-semibold px-4 py-2 rounded">
+                    Start Batch Analysis
+                </a>
+            </div>
+
+            <!-- History Card -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-xl font-bold mb-4">Analysis History</h3>
+                <p class="text-gray-600 mb-4">View your previous analysis results</p>
+                <a href="@Url.Action("History", "Analysis")" 
+                   class="inline-block bg-purple-500 hover:bg-purple-600 text-white font-semibold px-4 py-2 rounded">
+                    View History
+                </a>
+            </div>
+        </div>
+
+        <!-- Recent Analysis Section -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">Recent Analysis</h2>
+                <a href="@Url.Action("History", "Analysis")" class="text-blue-500 hover:text-blue-600">View All</a>
+            </div>
+            
+            @await Component.InvokeAsync("RecentAnalyses")
+        </div>
+
+        <!-- Bottom Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+            <!-- Stats Card -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-xl font-bold mb-4">Your Statistics</h3>
+                @await Component.InvokeAsync("UserStats")
+            </div>
+
+            <!-- Quick Tips Card -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-xl font-bold mb-4">Tips for Better Analysis</h3>
+                <ul class="list-disc list-inside text-gray-600 space-y-2">
+                    <li>Ensure good lighting when taking photos</li>
+                    <li>Center the bell pepper in the frame</li>
+                    <li>Use a dark background for better results</li>
+                    <li>Keep the camera steady to avoid blur</li>
+                    <li>Capture the entire bell pepper in the image</li>
+                </ul>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- Landing page for non-logged-in users -->
+        <div class="text-center py-12">
+            <h1 class="text-4xl font-bold mb-4">Bell Pepper Ripeness Analysis</h1>
+            <p class="text-xl text-gray-600 mb-8">
+                Use advanced image processing and machine learning to determine the ripeness of your bell peppers.
+            </p>
+            <div class="space-y-4">
+                <a asp-area="Identity" asp-page="/Account/Register" 
+                   class="inline-block bg-blue-500 hover:bg-blue-600 text-white font-semibold px-6 py-3 rounded-lg mx-2">
+                    Get Started
+                </a>
+                <a asp-area="Identity" asp-page="/Account/Login" 
+                   class="inline-block bg-gray-500 hover:bg-gray-600 text-white font-semibold px-6 py-3 rounded-lg mx-2">
+                    Sign In
+                </a>
+            </div>
+        </div>
+
+        <!-- Features Section -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
+            <div class="text-center p-6">
+                <div class="text-4xl mb-4">🔍</div>
+                <h3 class="text-xl font-bold mb-2">Quick Analysis</h3>
+                <p class="text-gray-600">Get instant ripeness analysis of your bell peppers using advanced image processing</p>
+            </div>
+            <div class="text-center p-6">
+                <div class="text-4xl mb-4">📊</div>
+                <h3 class="text-xl font-bold mb-2">Detailed Reports</h3>
+                <p class="text-gray-600">Access comprehensive analysis reports with visual representations</p>
+            </div>
+            <div class="text-center p-6">
+                <div class="text-4xl mb-4">📱</div>
+                <h3 class="text-xl font-bold mb-2">Easy to Use</h3>
+                <p class="text-gray-600">Simple interface for both single image and batch processing</p>
+            </div>
+        </div>
+    }
+</div>

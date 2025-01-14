@@ -1,0 +1,151 @@
+﻿@model BellPepperImage
+
+<div class="container mx-auto p-4">
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white shadow-md rounded-lg overflow-hidden">
+            <div class="p-6">
+                <h2 class="text-2xl font-bold mb-6">Analysis Results</h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <!-- Original and Processed Images -->
+                    <div>
+                        <h3 class="text-lg font-semibold mb-2">Original Image</h3>
+                        <img src="@Url.Action("GetImage", new { id = Model.Id, type = "original" })"
+                             alt="Original pepper"
+                             class="w-full rounded-lg shadow-md" />
+                    </div>
+                    @if (Model.HasDetailedAnalysis)
+                    {
+                        <div>
+                            <h3 class="text-lg font-semibold mb-2">Processed Image</h3>
+                            <img src="@Url.Action("GetImage", new { id = Model.Id, type = "processed" })"
+                                 alt="Processed pepper"
+                                 class="w-full rounded-lg shadow-md" />
+                        </div>
+                    }
+                </div>
+
+                <!-- Prediction Results -->
+                <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                    <h3 class="text-lg font-semibold mb-2">Prediction Results</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-gray-600">Maturity Level</p>
+                            <p class="text-xl font-bold">@Model.PredictedMaturityLevel</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-600">Confidence</p>
+                            <p class="text-xl font-bold">@(Model.PredictionConfidence.ToString("P"))</p>
+                        </div>
+                    </div>
+                </div>
+
+                @if (Model.HasDetailedAnalysis)
+                {
+                    <!-- Detailed Analysis Section -->
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold mb-4">Detailed Analysis</h3>
+
+                        <!-- Feature Values -->
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+                            <div class="bg-gray-50 p-3 rounded">
+                                <p class="text-gray-600">Max Value</p>
+                                <p class="font-bold">@Model.MaxValue.ToString("F2")</p>
+                            </div>
+                            <div class="bg-gray-50 p-3 rounded">
+                                <p class="text-gray-600">Min Value</p>
+                                <p class="font-bold">@Model.MinValue.ToString("F2")</p>
+                            </div>
+                            <div class="bg-gray-50 p-3 rounded">
+                                <p class="text-gray-600">Standard Deviation</p>
+                                <p class="font-bold">@Model.StdValue.ToString("F2")</p>
+                            </div>
+                            <div class="bg-gray-50 p-3 rounded">
+                                <p class="text-gray-600">Mean Value</p>
+                                <p class="font-bold">@Model.MeanValue.ToString("F2")</p>
+                            </div>
+                            <div class="bg-gray-50 p-3 rounded">
+                                <p class="text-gray-600">Median Value</p>
+                                <p class="font-bold">@Model.MedianValue.ToString("F2")</p>
+                            </div>
+                        </div>
+
+                        <!-- FFT Spectrum Analysis -->
+                        <div class="space-y-6">
+                            <h4 class="text-lg font-semibold">FFT Spectrum Analysis</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <p class="font-medium mb-2">R Channel Spectrum</p>
+                                    <img src="@Url.Action("GetImage", new { id = Model.Id, type = "spectrumR" })"
+                                         alt="R spectrum"
+                                         class="w-full rounded-lg shadow-md" />
+                                </div>
+                                <div>
+                                    <p class="font-medium mb-2">G Channel Spectrum</p>
+                                    <img src="@Url.Action("GetImage", new { id = Model.Id, type = "spectrumG" })"
+                                         alt="G spectrum"
+                                         class="w-full rounded-lg shadow-md" />
+                                </div>
+                                <div>
+                                    <p class="font-medium mb-2">B Channel Spectrum</p>
+                                    <img src="@Url.Action("GetImage", new { id = Model.Id, type = "spectrumB" })"
+                                         alt="B spectrum"
+                                         class="w-full rounded-lg shadow-md" />
+                                </div>
+                                <div>
+                                    <p class="font-medium mb-2">Combined Spectrum</p>
+                                    <img src="@Url.Action("GetImage", new { id = Model.Id, type = "spectrumCombined" })"
+                                         alt="Combined spectrum"
+                                         class="w-full rounded-lg shadow-md" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Additional Analysis -->
+                        <div class="mt-6">
+                            <h4 class="text-lg font-semibold mb-4">Additional Analysis</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <p class="font-medium mb-2">Inverse FFT</p>
+                                    <img src="@Url.Action("GetImage", new { id = Model.Id, type = "inverseFFT" })"
+                                         alt="Inverse FFT"
+                                         class="w-full rounded-lg shadow-md" />
+                                </div>
+                                <div>
+                                    <p class="font-medium mb-2">Sobel Filter H1</p>
+                                    <img src="@Url.Action("GetImage", new { id = Model.Id, type = "sobelH1" })"
+                                         alt="Sobel H1"
+                                         class="w-full rounded-lg shadow-md" />
+                                </div>
+                                <div>
+                                    <p class="font-medium mb-2">Sobel Filter H2</p>
+                                    <img src="@Url.Action("GetImage", new { id = Model.Id, type = "sobelH2" })"
+                                         alt="Sobel H2"
+                                         class="w-full rounded-lg shadow-md" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <div class="mt-6 flex justify-between">
+                    <a asp-action="Index" class="text-blue-500 hover:text-blue-700">Back to List</a>
+                    <div>
+                        <a href="#" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2">
+                            Download Report
+                        </a>
+                        <a href="#" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                            Share Analysis
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Add any JavaScript for interactivity here
+    </script>
+}
