@@ -1,0 +1,31 @@
+﻿@model Dictionary<string, int>
+
+@if (!Model.Any())
+{
+    <div class="text-center py-4 text-gray-500">
+        <p>No statistics available yet.</p>
+    </div>
+}
+else
+{
+    <div class="space-y-4">
+        @foreach (var stat in Model)
+        {
+            <div class="flex items-center justify-between">
+                <span class="text-gray-600">@stat.Key</span>
+                <span class="font-semibold">@stat.Value</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+                <div class="bg-blue-500 h-2 rounded-full"
+                     style="width: @(((float)stat.Value / Model.Values.Sum()) * 100)%">
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="mt-4 pt-4 border-t border-gray-200">
+        <div class="text-gray-600">
+            Total Analyses: @Model.Values.Sum()
+        </div>
+    </div>
+}

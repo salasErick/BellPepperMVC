@@ -1,0 +1,34 @@
+﻿@model IEnumerable<BellPepperImage>
+
+@if (!Model.Any())
+{
+    <div class="text-center py-8 text-gray-500">
+        <p>No analyses yet. Start by uploading a bell pepper image!</p>
+    </div>
+}
+else
+{
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        @foreach (var analysis in Model)
+        {
+            <div class="bg-gray-50 rounded-lg overflow-hidden shadow">
+                <img src="@Url.Action("GetImage", "Analysis", new { id = analysis.Id })"
+                     alt="Bell Pepper Analysis"
+                     class="w-full h-32 object-cover" />
+                <div class="p-4">
+                    <div class="font-semibold mb-1">@analysis.PredictedMaturityLevel</div>
+                    <div class="text-sm text-gray-600">
+                        Confidence: @(analysis.PredictionConfidence.ToString("P"))
+                    </div>
+                    <div class="text-xs text-gray-500 mt-1">
+                        @analysis.UploadDate.ToString("MMM dd, yyyy")
+                    </div>
+                    <a href="@Url.Action("Details", "Analysis", new { id = analysis.Id })"
+                       class="text-blue-500 hover:text-blue-600 text-sm block mt-2">
+                        View Details
+                    </a>
+                </div>
+            </div>
+        }
+    </div>
+}
