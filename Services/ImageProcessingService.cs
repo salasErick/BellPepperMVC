@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using BellPepperMVC.Data;
 using BellPepperMVC.Models;
 using Microsoft.CodeAnalysis.Diagnostics;
@@ -127,6 +128,8 @@ namespace BellPepperMVC.Services
                 // Process detailed analysis results
                 if (requestDetailedAnalysis && result.Features != null)
                 {
+                    _logger.LogInformation($"Processing features: MaxValue={result.Features.MaxValue}, MinValue={result.Features.MinValue}");
+
                     // Store numerical features
                     bellPepperImage.MaxValue = Convert.ToDecimal(result.Features.MaxValue);
                     bellPepperImage.MinValue = Convert.ToDecimal(result.Features.MinValue);
@@ -134,32 +137,68 @@ namespace BellPepperMVC.Services
                     bellPepperImage.MeanValue = Convert.ToDecimal(result.Features.MeanValue);
                     bellPepperImage.MedianValue = Convert.ToDecimal(result.Features.MedianValue);
 
-                    // Store processed and analysis images
-                    if (!string.IsNullOrEmpty(result.ProcessedImage))
-                        bellPepperImage.ProcessedImage = Convert.FromBase64String(result.ProcessedImage);
+                    _logger.LogInformation($"Stored features: MaxValue={bellPepperImage.MaxValue}, MinValue={bellPepperImage.MinValue}");
 
-                    if (!string.IsNullOrEmpty(result.SpectrumR))
-                        bellPepperImage.SpectrumR = Convert.FromBase64String(result.SpectrumR);
+                    // Process image data
+                    _logger.LogInformation($"ProcessedImage length: {result.ProcessedImage?.Length ?? 0}");
+                    _logger.LogInformation($"SpectrumR length: {result.SpectrumR?.Length ?? 0}");
 
-                    if (!string.IsNullOrEmpty(result.SpectrumG))
-                        bellPepperImage.SpectrumG = Convert.FromBase64String(result.SpectrumG);
+                    try
+                    {
+                        if (result.ProcessedImage != null)
+                        {
+                            bellPepperImage.ProcessedImage = Convert.FromBase64String(result.ProcessedImage);
+                            _logger.LogInformation("Processed image converted successfully");
+                        }
 
-                    if (!string.IsNullOrEmpty(result.SpectrumB))
-                        bellPepperImage.SpectrumB = Convert.FromBase64String(result.SpectrumB);
+                        if (result.SpectrumR != null)
+                        {
+                            bellPepperImage.SpectrumR = Convert.FromBase64String(result.SpectrumR);
+                            _logger.LogInformation("SpectrumR converted successfully");
+                        }
 
-                    if (!string.IsNullOrEmpty(result.SpectrumCombined))
-                        bellPepperImage.SpectrumCombined = Convert.FromBase64String(result.SpectrumCombined);
+                        if (result.SpectrumG != null)
+                        {
+                            bellPepperImage.SpectrumG = Convert.FromBase64String(result.SpectrumG);
+                            _logger.LogInformation("SpectrumG converted successfully");
+                        }
 
-                    if (!string.IsNullOrEmpty(result.InverseFft))
-                        bellPepperImage.InverseFFT = Convert.FromBase64String(result.InverseFft);
+                        if (result.SpectrumB != null)
+                        {
+                            bellPepperImage.SpectrumB = Convert.FromBase64String(result.SpectrumB);
+                            _logger.LogInformation("SpectrumB converted successfully");
+                        }
 
-                    if (!string.IsNullOrEmpty(result.SobelH1))
-                        bellPepperImage.SobelH1 = Convert.FromBase64String(result.SobelH1);
+                        if (result.SpectrumCombined != null)
+                        {
+                            bellPepperImage.SpectrumCombined = Convert.FromBase64String(result.SpectrumCombined);
+                            _logger.LogInformation("SpectrumCombined converted successfully");
+                        }
 
-                    if (!string.IsNullOrEmpty(result.SobelH2))
-                        bellPepperImage.SobelH2 = Convert.FromBase64String(result.SobelH2);
+                        if (result.InverseFft != null)
+                        {
+                            bellPepperImage.InverseFFT = Convert.FromBase64String(result.InverseFft);
+                            _logger.LogInformation("InverseFft converted successfully");
+                        }
+
+                        if (result.SobelH1 != null)
+                        {
+                            bellPepperImage.SobelH1 = Convert.FromBase64String(result.SobelH1);
+                            _logger.LogInformation("SobelH1 converted successfully");
+                        }
+
+                        if (result.SobelH2 != null)
+                        {
+                            bellPepperImage.SobelH2 = Convert.FromBase64String(result.SobelH2);
+                            _logger.LogInformation("SobelH2 converted successfully");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError($"Error converting base64 images: {ex.Message}");
+                        throw;
+                    }
                 }
-
                 // Save to database
                 _context.BellPepperImages.Add(bellPepperImage);
                 await _context.SaveChangesAsync();
@@ -207,28 +246,62 @@ namespace BellPepperMVC.Services
     }
     public class AnalysisResult
     {
+        [JsonPropertyName("status")]
         public string Status { get; set; }
+
+        [JsonPropertyName("prediction")]
         public string Prediction { get; set; }
+
+        [JsonPropertyName("confidence")]
         public double Confidence { get; set; }
+
+        [JsonPropertyName("features")]
         public Features Features { get; set; }
-        public string Error { get; set; }
+
+        [JsonPropertyName("processed_image")]
         public string ProcessedImage { get; set; }
+
+        [JsonPropertyName("spectrum_r")]
         public string SpectrumR { get; set; }
+
+        [JsonPropertyName("spectrum_g")]
         public string SpectrumG { get; set; }
+
+        [JsonPropertyName("spectrum_b")]
         public string SpectrumB { get; set; }
+
+        [JsonPropertyName("spectrum_combined")]
         public string SpectrumCombined { get; set; }
+
+        [JsonPropertyName("inverse_fft")]
         public string InverseFft { get; set; }
+
+        [JsonPropertyName("sobel_h1")]
         public string SobelH1 { get; set; }
+
+        [JsonPropertyName("sobel_h2")]
         public string SobelH2 { get; set; }
+
+        [JsonPropertyName("error")]
+        public string Error { get; set; }
     }
 
 
     public class Features
     {
+        [JsonPropertyName("max_value")]
         public double MaxValue { get; set; }
+
+        [JsonPropertyName("min_value")]
         public double MinValue { get; set; }
+
+        [JsonPropertyName("std_value")]
         public double StdValue { get; set; }
+
+        [JsonPropertyName("mean_value")]
         public double MeanValue { get; set; }
+
+        [JsonPropertyName("median_value")]
         public double MedianValue { get; set; }
     }
 
