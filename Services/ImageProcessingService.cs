@@ -47,13 +47,12 @@ namespace BellPepperMVC.Services
 
         public async Task<BellPepperImage> ProcessImageAsync(IFormFile file, string userId, bool requestDetailedAnalysis)
         {
-            var tempUploadPath = Path.GetFullPath(_configuration["PythonSettings:TempUploadPath"]);
             var tempFileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
-            var tempFilePath = Path.GetFullPath(Path.Combine(tempUploadPath, tempFileName));
+            var tempFilePath = Path.Combine(_configuration["PythonSettings:TempUploadPath"], tempFileName);
 
             try
             {
-                Directory.CreateDirectory(tempUploadPath);
+                Directory.CreateDirectory(_configuration["PythonSettings:TempUploadPath"]);
 
                 // Save the uploaded file temporarily
                 using (var stream = new FileStream(tempFilePath, FileMode.Create))
@@ -62,10 +61,12 @@ namespace BellPepperMVC.Services
                 }
 
                 var pythonPath = _configuration["PythonSettings:PythonPath"];
-                var scriptPath = _configuration["PythonSettings:AnalysisScriptPath"];
+                var scriptPath = requestDetailedAnalysis ?
+                    _configuration["PythonSettings:DetailedAnalysisScriptPath"] :
+                    _configuration["PythonSettings:AnalysisScriptPath"];
                 var modelPath = _configuration["PythonSettings:ModelPath"];
+                var projectPath = _configuration["PythonSettings:ProjectPath"];
 
-                _logger.LogInformation($"Image temp path: {tempFilePath}");
                 var startInfo = new ProcessStartInfo
                 {
                     FileName = pythonPath,
@@ -74,16 +75,24 @@ namespace BellPepperMVC.Services
                     RedirectStandardError = true,
                     UseShellExecute = false,
                     CreateNoWindow = true,
-                    WorkingDirectory = _configuration["PythonSettings:ProjectPath"]
+                    WorkingDirectory = projectPath
                 };
 
-                _logger.LogInformation($"Image temp path: {tempFilePath}");
-                _logger.LogInformation($"Full Python command: {startInfo.FileName} {startInfo.Arguments}");
+                _logger.LogInformation($"Executing Python script: {startInfo.FileName} {startInfo.Arguments}");
+                _logger.LogInformation($"Working Directory: {startInfo.WorkingDirectory}");
+
                 using var process = Process.Start(startInfo);
                 var output = await process.StandardOutput.ReadToEndAsync();
-                _logger.LogInformation($"Raw Python output: {output}");
-
                 var error = await process.StandardError.ReadToEndAsync();
+                await process.WaitForExitAsync();
+
+                if (process.ExitCode != 0)
+                {
+                    _logger.LogError($"Python script failed with exit code {process.ExitCode}. Error: {error}");
+                    throw new Exception($"Analysis failed: {error}");
+                }
+
+                _logger.LogInformation($"Python script output: {output}");
 
                 var options = new JsonSerializerOptions
                 {
@@ -92,22 +101,9 @@ namespace BellPepperMVC.Services
 
                 var result = JsonSerializer.Deserialize<AnalysisResult>(output, options);
 
-                _logger.LogInformation($"Deserialized result - Status: {result?.Status}, Prediction: {result?.Prediction}, Confidence: {result?.Confidence}");
-
                 if (result == null || result.Status != "success")
                 {
                     throw new Exception($"Analysis failed: {result?.Error ?? "Unknown error"}");
-                }
-                await process.WaitForExitAsync();
-
-                if (process.ExitCode != 0 || string.IsNullOrWhiteSpace(output))
-                {
-                    throw new Exception($"Analysis failed. Error: {error}");
-                }
-
-                if (result == null)
-                {
-                    throw new Exception("Failed to parse analysis results");
                 }
 
                 var bellPepperImage = new BellPepperImage
@@ -128,15 +124,43 @@ namespace BellPepperMVC.Services
                     bellPepperImage.Image = ms.ToArray();
                 }
 
+                // Process detailed analysis results
                 if (requestDetailedAnalysis && result.Features != null)
                 {
+                    // Store numerical features
                     bellPepperImage.MaxValue = Convert.ToDecimal(result.Features.MaxValue);
                     bellPepperImage.MinValue = Convert.ToDecimal(result.Features.MinValue);
                     bellPepperImage.StdValue = Convert.ToDecimal(result.Features.StdValue);
                     bellPepperImage.MeanValue = Convert.ToDecimal(result.Features.MeanValue);
                     bellPepperImage.MedianValue = Convert.ToDecimal(result.Features.MedianValue);
+
+                    // Store processed and analysis images
+                    if (!string.IsNullOrEmpty(result.ProcessedImage))
+                        bellPepperImage.ProcessedImage = Convert.FromBase64String(result.ProcessedImage);
+
+                    if (!string.IsNullOrEmpty(result.SpectrumR))
+                        bellPepperImage.SpectrumR = Convert.FromBase64String(result.SpectrumR);
+
+                    if (!string.IsNullOrEmpty(result.SpectrumG))
+                        bellPepperImage.SpectrumG = Convert.FromBase64String(result.SpectrumG);
+
+                    if (!string.IsNullOrEmpty(result.SpectrumB))
+                        bellPepperImage.SpectrumB = Convert.FromBase64String(result.SpectrumB);
+
+                    if (!string.IsNullOrEmpty(result.SpectrumCombined))
+                        bellPepperImage.SpectrumCombined = Convert.FromBase64String(result.SpectrumCombined);
+
+                    if (!string.IsNullOrEmpty(result.InverseFft))
+                        bellPepperImage.InverseFFT = Convert.FromBase64String(result.InverseFft);
+
+                    if (!string.IsNullOrEmpty(result.SobelH1))
+                        bellPepperImage.SobelH1 = Convert.FromBase64String(result.SobelH1);
+
+                    if (!string.IsNullOrEmpty(result.SobelH2))
+                        bellPepperImage.SobelH2 = Convert.FromBase64String(result.SobelH2);
                 }
 
+                // Save to database
                 _context.BellPepperImages.Add(bellPepperImage);
                 await _context.SaveChangesAsync();
 
@@ -149,13 +173,13 @@ namespace BellPepperMVC.Services
             }
             finally
             {
+                // Clean up temporary file
                 if (File.Exists(tempFilePath))
                 {
                     File.Delete(tempFilePath);
                 }
             }
         }
-
         public async Task<IEnumerable<BellPepperImage>> GetUserAnalysesAsync(string userId, int take = 10)
         {
             return await _context.BellPepperImages
@@ -188,6 +212,14 @@ namespace BellPepperMVC.Services
         public double Confidence { get; set; }
         public Features Features { get; set; }
         public string Error { get; set; }
+        public string ProcessedImage { get; set; }
+        public string SpectrumR { get; set; }
+        public string SpectrumG { get; set; }
+        public string SpectrumB { get; set; }
+        public string SpectrumCombined { get; set; }
+        public string InverseFft { get; set; }
+        public string SobelH1 { get; set; }
+        public string SobelH2 { get; set; }
     }
 
 

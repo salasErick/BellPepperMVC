@@ -4,6 +4,7 @@ using BellPepperMVC.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BellPepperMVC.Migrations
 {
     [DbContext(typeof(BellPepperMVCContext))]
-    partial class BellPepperMVCContextModelSnapshot : ModelSnapshot
+    [Migration("20250115185731_AddDetailedAnalysisFields")]
+    partial class AddDetailedAnalysisFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -119,18 +122,19 @@ namespace BellPepperMVC.Migrations
                         .HasColumnType("varbinary(max)");
 
                     b.Property<byte[]>("InverseFFT")
+                        .IsRequired()
                         .HasColumnType("varbinary(max)");
 
-                    b.Property<decimal?>("MaxValue")
+                    b.Property<decimal>("MaxValue")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal?>("MeanValue")
+                    b.Property<decimal>("MeanValue")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal?>("MedianValue")
+                    b.Property<decimal>("MedianValue")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal?>("MinValue")
+                    b.Property<decimal>("MinValue")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("PredictedMaturityLevel")
@@ -141,27 +145,34 @@ namespace BellPepperMVC.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<byte[]>("ProcessedImage")
+                        .IsRequired()
                         .HasColumnType("varbinary(max)");
 
                     b.Property<byte[]>("SobelH1")
+                        .IsRequired()
                         .HasColumnType("varbinary(max)");
 
                     b.Property<byte[]>("SobelH2")
+                        .IsRequired()
                         .HasColumnType("varbinary(max)");
 
                     b.Property<byte[]>("SpectrumB")
+                        .IsRequired()
                         .HasColumnType("varbinary(max)");
 
                     b.Property<byte[]>("SpectrumCombined")
+                        .IsRequired()
                         .HasColumnType("varbinary(max)");
 
                     b.Property<byte[]>("SpectrumG")
+                        .IsRequired()
                         .HasColumnType("varbinary(max)");
 
                     b.Property<byte[]>("SpectrumR")
+                        .IsRequired()
                         .HasColumnType("varbinary(max)");
 
-                    b.Property<decimal?>("StdValue")
+                    b.Property<decimal>("StdValue")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("UploadDate")

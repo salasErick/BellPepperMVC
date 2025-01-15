@@ -13,24 +13,35 @@
                 <div class="card-body">
                     <form asp-action="Upload" asp-controller="Analysis" method="post" enctype="multipart/form-data">
                         <div class="mb-3">
-                            <label for="File" class="form-label">Select Image</label>
-                            <input type="file" class="form-control" id="File" name="File" accept="image/*" required>
+                            <label asp-for="File" class="form-label">Select Image</label>
+                            <input asp-for="File" type="file" class="form-control" accept="image/*" required>
                             <div class="form-text">Please upload a clear image of a bell pepper.</div>
                             <span asp-validation-for="File" class="text-danger"></span>
                         </div>
 
                         <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" id="RequestDetailedAnalysis" name="RequestDetailedAnalysis">
-                            <label class="form-check-label" for="RequestDetailedAnalysis">Request Detailed Analysis</label>
+                            <input asp-for="RequestDetailedAnalysis" type="checkbox" class="form-check-input">
+                            <label asp-for="RequestDetailedAnalysis" class="form-check-label">Request Detailed Analysis</label>
                         </div>
 
                         <div class="alert alert-info">
                             <h5 class="alert-heading">What will be analyzed?</h5>
                             <ul class="mb-0">
-                                <li>Image color composition</li>
-                                <li>Frequency domain analysis (FFT)</li>
-                                <li>Edge detection</li>
-                                <li>Maturity prediction</li>
+                                <li>
+                                    Basic Analysis:
+                                    <ul>
+                                        <li>Maturity level prediction</li>
+                                        <li>Confidence score</li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    Detailed Analysis (if requested):
+                                    <ul>
+                                        <li>FFT spectrum analysis</li>
+                                        <li>Statistical features</li>
+                                        <li>Image processing visualizations</li>
+                                    </ul>
+                                </li>
                             </ul>
                         </div>
 

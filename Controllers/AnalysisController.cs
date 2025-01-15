@@ -100,12 +100,20 @@ namespace BellPepperMVC.Controllers
             {
                 viewModel.DetailedFeatures = new DetailedFeatures
                 {
-                    MaxValue = analysis.MaxValue,
-                    MinValue = analysis.MinValue,
-                    StdValue = analysis.StdValue,
-                    MeanValue = analysis.MeanValue,
-                    MedianValue = analysis.MedianValue
+                    MaxValue = analysis.MaxValue ?? 0,  // Provide default value if null
+                    MinValue = analysis.MinValue ?? 0,
+                    StdValue = analysis.StdValue ?? 0,
+                    MeanValue = analysis.MeanValue ?? 0,
+                    MedianValue = analysis.MedianValue ?? 0
                 };
+
+                // Also make sure to set the flags for available images
+                viewModel.HasSpectrumImages = analysis.SpectrumR != null &&
+                                             analysis.SpectrumG != null &&
+                                             analysis.SpectrumB != null &&
+                                             analysis.SpectrumCombined != null;
+                viewModel.HasSobelFilters = analysis.SobelH1 != null && analysis.SobelH2 != null;
+                viewModel.HasInverseFFT = analysis.InverseFFT != null;
             }
 
             return View(viewModel);

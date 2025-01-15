@@ -1,4 +1,4 @@
-﻿@model IEnumerable<BellPepperImage>
+﻿@model IEnumerable<BellPepperMVC.Models.BellPepperImage>
 
 @if (!Model.Any())
 {
@@ -8,25 +8,31 @@
 }
 else
 {
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
         @foreach (var analysis in Model)
         {
-            <div class="bg-gray-50 rounded-lg overflow-hidden shadow">
-                <img src="@Url.Action("GetImage", "Analysis", new { id = analysis.Id })"
-                     alt="Bell Pepper Analysis"
-                     class="w-full h-32 object-cover" />
-                <div class="p-4">
-                    <div class="font-semibold mb-1">@analysis.PredictedMaturityLevel</div>
-                    <div class="text-sm text-gray-600">
-                        Confidence: @(analysis.PredictionConfidence.ToString("P"))
+            <div class="bg-gray-50 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                <div class="aspect-w-4 aspect-h-3">
+                    <img src="@Url.Action("GetImage", "Analysis", new { id = analysis.Id })"
+                         alt="Bell Pepper Analysis"
+                         class="object-cover w-full h-48"
+                         style="width: 150px; height: 150px;" />
+                </div>
+                <div class="p-3">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-sm font-medium truncate">@analysis.FileName</span>
+                        <span class="text-xs text-gray-500">@analysis.UploadDate.ToString("MMM dd")</span>
                     </div>
-                    <div class="text-xs text-gray-500 mt-1">
-                        @analysis.UploadDate.ToString("MMM dd, yyyy")
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm @(analysis.PredictedMaturityLevel == "Ripe" ? "text-green-600" :
+                                             analysis.PredictedMaturityLevel == "Unripe" ? "text-yellow-600" : "text-red-600")">
+                            @analysis.PredictedMaturityLevel
+                        </span>
+                        <a href="@Url.Action("Details", "Analysis", new { id = analysis.Id })"
+                           class="text-xs text-blue-600 hover:text-blue-800">
+                            View Details
+                        </a>
                     </div>
-                    <a href="@Url.Action("Details", "Analysis", new { id = analysis.Id })"
-                       class="text-blue-500 hover:text-blue-600 text-sm block mt-2">
-                        View Details
-                    </a>
                 </div>
             </div>
         }

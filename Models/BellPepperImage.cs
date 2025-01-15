@@ -16,6 +16,8 @@ namespace BellPepperMVC.Models
         [Required]
         public string FileName { get; set; }
 
+        public byte[]? ProcessedImage { get; set; }
+
         [Column(TypeName = "nvarchar(100)")]
         [Required]
         public string ContentType { get; set; }
@@ -26,13 +28,12 @@ namespace BellPepperMVC.Models
         [Column(TypeName = "nvarchar(50)")]
         public string PredictedMaturityLevel { get; set; }
 
-        [Column(TypeName = "decimal(5,2)")]
+        [Column(TypeName = "decimal(18,2)")]
         public decimal PredictionConfidence { get; set; }
 
         public bool HasDetailedAnalysis { get; set; }
 
-        // Detailed analysis results
-        public byte[]? ProcessedImage { get; set; }
+        // Analysis Images
         public byte[]? SpectrumR { get; set; }
         public byte[]? SpectrumG { get; set; }
         public byte[]? SpectrumB { get; set; }
@@ -42,11 +43,11 @@ namespace BellPepperMVC.Models
         public byte[]? SobelH2 { get; set; }
 
         // Feature values
-        public decimal MaxValue { get; set; }
-        public decimal MinValue { get; set; }
-        public decimal StdValue { get; set; }
-        public decimal MeanValue { get; set; }
-        public decimal MedianValue { get; set; }
+        public decimal? MaxValue { get; set; }
+        public decimal? MinValue { get; set; }
+        public decimal? StdValue { get; set; }
+        public decimal? MeanValue { get; set; }
+        public decimal? MedianValue { get; set; }
 
         [Required]
         public string UserId { get; set; }
