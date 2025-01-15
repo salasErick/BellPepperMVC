@@ -1,77 +1,77 @@
-﻿@model AnalysisViewModel
+﻿@model BellPepperMVC.Controllers.ImageUploadViewModel
+@{
+    ViewData["Title"] = "Upload Image";
+}
 
-<div class="container mx-auto p-4">
-    <div class="max-w-2xl mx-auto">
-        <div class="bg-white shadow-md rounded-lg p-6">
-            <h2 class="text-2xl font-bold mb-6">Analyze Bell Pepper</h2>
-
-            <form asp-action="Upload" method="post" enctype="multipart/form-data" class="space-y-4">
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2">Upload Image</label>
-                    <div class="flex items-center justify-center w-full">
-                        <label for="imageFile" class="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
-                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                                <svg class="w-8 h-8 mb-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
-                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2" />
-                                </svg>
-                                <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">Click to upload</span> or drag and drop</p>
-                                <p class="text-xs text-gray-500">JPG, JPEG, or PNG</p>
-                            </div>
-                            <input id="imageFile" name="file" type="file" class="hidden" accept=".jpg,.jpeg,.png" />
-                        </label>
-                    </div>
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="h4 mb-0">Upload Bell Pepper Image</h2>
                 </div>
-
-                <div class="mb-4">
-                    <label class="inline-flex items-center">
-                        <input type="checkbox" name="requestDetailedAnalysis" class="form-checkbox h-5 w-5 text-blue-600" />
-                        <span class="ml-2 text-gray-700">Request Detailed Analysis</span>
-                    </label>
-                </div>
-
-                <div class="flex items-center justify-between">
-                    <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-                        Analyze Image
-                    </button>
-                    <a asp-action="BatchUpload" class="text-blue-500 hover:text-blue-700">
-                        Switch to Batch Upload
-                    </a>
-                </div>
-            </form>
-        </div>
-
-        @if (Model?.RecentAnalyses?.Any() == true)
-        {
-            <div class="mt-8">
-                <h3 class="text-xl font-bold mb-4">Recent Analyses</h3>
-                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    @foreach (var analysis in Model.RecentAnalyses)
-                    {
-                        <div class="bg-white shadow-md rounded-lg overflow-hidden">
-                            <img src="@Url.Action("GetImage", new { id = analysis.Id })" alt="Analyzed pepper" class="w-full h-32 object-cover" />
-                            <div class="p-4">
-                                <p class="font-bold">@analysis.PredictedMaturityLevel</p>
-                                <p class="text-sm text-gray-600">Confidence: @(analysis.PredictionConfidence.ToString("P"))</p>
-                                <a href="@Url.Action("Details", new { id = analysis.Id })" class="text-blue-500 hover:text-blue-700 text-sm">View Details</a>
-                            </div>
+                <div class="card-body">
+                    <form asp-action="Upload" asp-controller="Analysis" method="post" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="File" class="form-label">Select Image</label>
+                            <input type="file" class="form-control" id="File" name="File" accept="image/*" required>
+                            <div class="form-text">Please upload a clear image of a bell pepper.</div>
+                            <span asp-validation-for="File" class="text-danger"></span>
                         </div>
-                    }
+
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="RequestDetailedAnalysis" name="RequestDetailedAnalysis">
+                            <label class="form-check-label" for="RequestDetailedAnalysis">Request Detailed Analysis</label>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <h5 class="alert-heading">What will be analyzed?</h5>
+                            <ul class="mb-0">
+                                <li>Image color composition</li>
+                                <li>Frequency domain analysis (FFT)</li>
+                                <li>Edge detection</li>
+                                <li>Maturity prediction</li>
+                            </ul>
+                        </div>
+
+                        @if (!ViewData.ModelState.IsValid)
+                        {
+                            <div class="alert alert-danger">
+                                <div asp-validation-summary="All" class="mb-0"></div>
+                            </div>
+                        }
+
+                        <div class="text-end">
+                            <a asp-action="Index" class="btn btn-secondary me-2">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Upload and Analyze</button>
+                        </div>
+                    </form>
                 </div>
             </div>
-        }
+        </div>
     </div>
 </div>
 
 @section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
     <script>
-        document.getElementById('imageFile').addEventListener('change', function(e) {
-            if (e.target.files && e.target.files[0]) {
-                var reader = new FileReader();
-                reader.onload = function(e) {
-                    // Preview logic here if needed
-                };
-                reader.readAsDataURL(e.target.files[0]);
-            }
+        $(document).ready(function () {
+            // Preview image before upload
+            $("#File").change(function () {
+                if (this.files && this.files[0]) {
+                    var reader = new FileReader();
+                    reader.onload = function (e) {
+                        if ($('#imagePreview').length === 0) {
+                            $('.form-text').after('<div class="mt-3"><img id="imagePreview" src="" class="img-fluid rounded" style="max-height: 300px;" /></div>');
+                        }
+                        $('#imagePreview').attr('src', e.target.result);
+                    }
+                    reader.readAsDataURL(this.files[0]);
+                }
+            });
         });
     </script>
 }

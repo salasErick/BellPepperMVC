@@ -1,0 +1,73 @@
+﻿@model IEnumerable<BellPepperMVC.Models.BellPepperImage>
+@{
+    ViewData["Title"] = "Analysis History";
+}
+
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3">Analysis History</h1>
+            <p class="text-muted">View all your previous bell pepper analyses</p>
+        </div>
+        <div class="col text-end">
+            <a href="@Url.Action("Upload")" class="btn btn-primary">
+                <i class="bi bi-upload"></i> New Analysis
+            </a>
+        </div>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            <h4 class="alert-heading">No analyses yet!</h4>
+            <p>Upload your first bell pepper image to get started.</p>
+            <hr>
+            <a href="@Url.Action("Upload")" class="btn btn-primary">Upload Image</a>
+        </div>
+    }
+    else
+    {
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            @foreach (var analysis in Model)
+            {
+                <div class="col">
+                    <div class="card h-100">
+                        <img src="@Url.Action("GetImage", new { id = analysis.Id })"
+                             class="card-img-top"
+                             alt="Bell Pepper Analysis"
+                             style="height: 200px; object-fit: cover;">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                @analysis.PredictedMaturityLevel
+                                <span class="badge bg-primary">@(analysis.PredictionConfidence.ToString("P1"))</span>
+                            </h5>
+                            <p class="card-text">
+                                <small class="text-muted">
+                                    Analyzed on @analysis.UploadDate.ToString("MMM dd, yyyy HH:mm")
+                                </small>
+                            </p>
+                            @if (analysis.HasDetailedAnalysis)
+                            {
+                                <span class="badge bg-info">Detailed Analysis</span>
+                            }
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <a href="@Url.Action("Details", new { id = analysis.Id })"
+                               class="btn btn-outline-primary btn-sm">
+                                View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="mt-4">
+            <nav aria-label="Analysis history pages">
+                <ul class="pagination justify-content-center">
+                    @* Add pagination controls if needed *@
+                </ul>
+            </nav>
+        </div>
+    }
+</div>

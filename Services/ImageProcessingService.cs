@@ -2,6 +2,7 @@
 using System.Text.Json;
 using BellPepperMVC.Data;
 using BellPepperMVC.Models;
+using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 
 namespace BellPepperMVC.Services
@@ -29,6 +30,7 @@ namespace BellPepperMVC.Services
         private readonly BellPepperMVCContext _context;
         private readonly IConfiguration _configuration;
         private readonly ILogger<ImageProcessingService> _logger;
+        private readonly string _tempUploadPath;
 
         public ImageProcessingService(
             BellPepperMVCContext context,
@@ -38,153 +40,120 @@ namespace BellPepperMVC.Services
             _context = context;
             _configuration = configuration;
             _logger = logger;
+            _tempUploadPath = _configuration["PythonSettings:TempUploadPath"];
+            Directory.CreateDirectory(_tempUploadPath); // Ensure temp directory exists
         }
+
 
         public async Task<BellPepperImage> ProcessImageAsync(IFormFile file, string userId, bool requestDetailedAnalysis)
         {
-            // Create temp directory if it doesn't exist
-            var tempPath = _configuration["PythonSettings:TempUploadPath"];
-            Directory.CreateDirectory(tempPath);
-
-            // Save uploaded file temporarily
-            var tempFilePath = Path.Combine(tempPath, file.FileName);
-            using (var stream = new FileStream(tempFilePath, FileMode.Create))
-            {
-                await file.CopyToAsync(stream);
-            }
+            var tempUploadPath = Path.GetFullPath(_configuration["PythonSettings:TempUploadPath"]);
+            var tempFileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+            var tempFilePath = Path.GetFullPath(Path.Combine(tempUploadPath, tempFileName));
 
             try
             {
-                // Create BellPepperImage entity
+                Directory.CreateDirectory(tempUploadPath);
+
+                // Save the uploaded file temporarily
+                using (var stream = new FileStream(tempFilePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                var pythonPath = _configuration["PythonSettings:PythonPath"];
+                var scriptPath = _configuration["PythonSettings:AnalysisScriptPath"];
+                var modelPath = _configuration["PythonSettings:ModelPath"];
+
+                _logger.LogInformation($"Image temp path: {tempFilePath}");
+                var startInfo = new ProcessStartInfo
+                {
+                    FileName = pythonPath,
+                    Arguments = $"\"{scriptPath}\" \"{tempFilePath}\" \"{modelPath}\"",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    WorkingDirectory = _configuration["PythonSettings:ProjectPath"]
+                };
+
+                _logger.LogInformation($"Image temp path: {tempFilePath}");
+                _logger.LogInformation($"Full Python command: {startInfo.FileName} {startInfo.Arguments}");
+                using var process = Process.Start(startInfo);
+                var output = await process.StandardOutput.ReadToEndAsync();
+                _logger.LogInformation($"Raw Python output: {output}");
+
+                var error = await process.StandardError.ReadToEndAsync();
+
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                };
+
+                var result = JsonSerializer.Deserialize<AnalysisResult>(output, options);
+
+                _logger.LogInformation($"Deserialized result - Status: {result?.Status}, Prediction: {result?.Prediction}, Confidence: {result?.Confidence}");
+
+                if (result == null || result.Status != "success")
+                {
+                    throw new Exception($"Analysis failed: {result?.Error ?? "Unknown error"}");
+                }
+                await process.WaitForExitAsync();
+
+                if (process.ExitCode != 0 || string.IsNullOrWhiteSpace(output))
+                {
+                    throw new Exception($"Analysis failed. Error: {error}");
+                }
+
+                if (result == null)
+                {
+                    throw new Exception("Failed to parse analysis results");
+                }
+
                 var bellPepperImage = new BellPepperImage
                 {
                     FileName = file.FileName,
                     ContentType = file.ContentType,
                     UploadDate = DateTime.UtcNow,
                     UserId = userId,
+                    PredictedMaturityLevel = result.Prediction ?? "Unknown",
+                    PredictionConfidence = Convert.ToDecimal(result.Confidence),
                     HasDetailedAnalysis = requestDetailedAnalysis
                 };
 
-                // Read file bytes for storage
+                // Save the original image
                 using (var ms = new MemoryStream())
                 {
                     await file.CopyToAsync(ms);
                     bellPepperImage.Image = ms.ToArray();
                 }
 
-                if (requestDetailedAnalysis)
+                if (requestDetailedAnalysis && result.Features != null)
                 {
-                    // Run detailed analysis
-                    var detailedResult = await RunDetailedAnalysisAsync(tempFilePath);
-
-                    // Store detailed analysis results
-                    bellPepperImage.ProcessedImage = Convert.FromBase64String(detailedResult.Plots["processed_image"]);
-                    bellPepperImage.SpectrumR = Convert.FromBase64String(detailedResult.Plots["spectrum_R"]);
-                    bellPepperImage.SpectrumG = Convert.FromBase64String(detailedResult.Plots["spectrum_G"]);
-                    bellPepperImage.SpectrumB = Convert.FromBase64String(detailedResult.Plots["spectrum_B"]);
-                    bellPepperImage.SpectrumCombined = Convert.FromBase64String(detailedResult.Plots["spectrum_combined"]);
-                    bellPepperImage.InverseFFT = Convert.FromBase64String(detailedResult.Plots["inverse_fft"]);
-                    bellPepperImage.SobelH1 = Convert.FromBase64String(detailedResult.Plots["sobel_h1"]);
-                    bellPepperImage.SobelH2 = Convert.FromBase64String(detailedResult.Plots["sobel_h2"]);
-
-                    bellPepperImage.PredictedMaturityLevel = detailedResult.Prediction;
-                    bellPepperImage.PredictionConfidence = Convert.ToDecimal(detailedResult.Confidence);
-
-                    // Store feature values
-                    bellPepperImage.MaxValue = Convert.ToDecimal(detailedResult.Features["max_value"]);
-                    bellPepperImage.MinValue = Convert.ToDecimal(detailedResult.Features["min_value"]);
-                    bellPepperImage.StdValue = Convert.ToDecimal(detailedResult.Features["std_value"]);
-                    bellPepperImage.MeanValue = Convert.ToDecimal(detailedResult.Features["mean_value"]);
-                    bellPepperImage.MedianValue = Convert.ToDecimal(detailedResult.Features["median_value"]);
-                }
-                else
-                {
-                    // Run quick analysis
-                    var quickResult = await RunQuickAnalysisAsync(tempFilePath);
-                    bellPepperImage.PredictedMaturityLevel = quickResult.Prediction;
-                    bellPepperImage.PredictionConfidence = Convert.ToDecimal(quickResult.Confidence);
+                    bellPepperImage.MaxValue = Convert.ToDecimal(result.Features.MaxValue);
+                    bellPepperImage.MinValue = Convert.ToDecimal(result.Features.MinValue);
+                    bellPepperImage.StdValue = Convert.ToDecimal(result.Features.StdValue);
+                    bellPepperImage.MeanValue = Convert.ToDecimal(result.Features.MeanValue);
+                    bellPepperImage.MedianValue = Convert.ToDecimal(result.Features.MedianValue);
                 }
 
-                // Save to database
                 _context.BellPepperImages.Add(bellPepperImage);
                 await _context.SaveChangesAsync();
 
                 return bellPepperImage;
             }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing image: {Message}", ex.Message);
+                throw;
+            }
             finally
             {
-                // Clean up temp file
                 if (File.Exists(tempFilePath))
                 {
                     File.Delete(tempFilePath);
                 }
             }
-        }
-
-        private async Task<ImageProcessingResult> RunQuickAnalysisAsync(string imagePath)
-        {
-            var pythonPath = _configuration["PythonSettings:PythonPath"];
-            var scriptPath = _configuration["PythonSettings:AnalysisScriptPath"];
-
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = pythonPath,
-                Arguments = $"\"{scriptPath}\" \"{imagePath}\"",
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-
-            using var process = Process.Start(startInfo);
-            var output = await process.StandardOutput.ReadToEndAsync();
-            var error = await process.StandardError.ReadToEndAsync();
-            await process.WaitForExitAsync();
-
-            if (process.ExitCode != 0)
-            {
-                _logger.LogError($"Python analysis failed: {error}");
-                throw new Exception($"Analysis failed: {error}");
-            }
-
-            return JsonSerializer.Deserialize<ImageProcessingResult>(output);
-        }
-
-        private async Task<ImageProcessingResult> RunDetailedAnalysisAsync(string imagePath)
-        {
-            var pythonPath = _configuration["PythonSettings:PythonPath"];
-            var scriptPath = _configuration["PythonSettings:DetailedAnalysisScriptPath"];
-            var outputDir = Path.Combine(_configuration["PythonSettings:TempUploadPath"], "analysis_output");
-            Directory.CreateDirectory(outputDir);
-
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = pythonPath,
-                Arguments = $"\"{scriptPath}\" \"{imagePath}\" \"{outputDir}\"",
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-
-            using var process = Process.Start(startInfo);
-            var output = await process.StandardOutput.ReadToEndAsync();
-            var error = await process.StandardError.ReadToEndAsync();
-            await process.WaitForExitAsync();
-
-            if (process.ExitCode != 0)
-            {
-                _logger.LogError($"Python detailed analysis failed: {error}");
-                throw new Exception($"Detailed analysis failed: {error}");
-            }
-
-            return JsonSerializer.Deserialize<ImageProcessingResult>(output);
-        }
-
-        public async Task<BellPepperImage?> GetAnalysisAsync(int id)
-        {
-            return await _context.BellPepperImages
-                .FirstOrDefaultAsync(x => x.Id == id);
         }
 
         public async Task<IEnumerable<BellPepperImage>> GetUserAnalysesAsync(string userId, int take = 10)
@@ -196,6 +165,11 @@ namespace BellPepperMVC.Services
                 .ToListAsync();
         }
 
+        public async Task<BellPepperImage?> GetAnalysisAsync(int id)
+        {
+            return await _context.BellPepperImages.FindAsync(id);
+        }
+
         public async Task<Dictionary<string, int>> GetMaturityDistributionAsync(string userId)
         {
             return await _context.BellPepperImages
@@ -205,6 +179,34 @@ namespace BellPepperMVC.Services
                     g => g.Key,
                     g => g.Count()
                 );
+        }
+    }
+    public class AnalysisResult
+    {
+        public string Status { get; set; }
+        public string Prediction { get; set; }
+        public double Confidence { get; set; }
+        public Features Features { get; set; }
+        public string Error { get; set; }
+    }
+
+
+    public class Features
+    {
+        public double MaxValue { get; set; }
+        public double MinValue { get; set; }
+        public double StdValue { get; set; }
+        public double MeanValue { get; set; }
+        public double MedianValue { get; set; }
+    }
+
+    public static class FormFileExtensions
+    {
+        public static async Task<byte[]> GetBytesAsync(this IFormFile formFile)
+        {
+            using var memoryStream = new MemoryStream();
+            await formFile.CopyToAsync(memoryStream);
+            return memoryStream.ToArray();
         }
     }
 }

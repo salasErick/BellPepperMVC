@@ -1,67 +1,95 @@
-﻿@model AnalysisViewModel
+﻿@model BellPepperMVC.Controllers.BatchUploadViewModel
+@{
+    ViewData["Title"] = "Batch Upload";
+}
 
-<div class="container mx-auto p-4">
-    <div class="max-w-2xl mx-auto">
-        <div class="bg-white shadow-md rounded-lg p-6">
-            <h2 class="text-2xl font-bold mb-6">Batch Analysis</h2>
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="h4 mb-0">Batch Upload Bell Pepper Images</h2>
+                </div>
+                <div class="card-body">
+                    <form asp-action="BatchUpload" asp-controller="Analysis" method="post" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="Files" class="form-label">Select Multiple Images</label>
+                            <input type="file" class="form-control" id="Files" name="Files" accept="image/*" multiple required>
+                            <div class="form-text">You can select multiple images by holding Ctrl/Cmd while selecting.</div>
+                            <span asp-validation-for="Files" class="text-danger"></span>
+                        </div>
 
-            <form asp-action="BatchUpload" method="post" enctype="multipart/form-data" class="space-y-4">
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2">Upload Images</label>
-                    <div class="flex items-center justify-center w-full">
-                        <label for="imageFiles" class="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
-                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                                <svg class="w-8 h-8 mb-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
-                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2" />
-                                </svg>
-                                <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">Click to upload</span> or drag and drop</p>
-                                <p class="text-xs text-gray-500">Multiple JPG, JPEG, or PNG files</p>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="RequestDetailedAnalysis" name="RequestDetailedAnalysis">
+                            <label class="form-check-label" for="RequestDetailedAnalysis">Request Detailed Analysis</label>
+                        </div>
+
+                        <div class="mb-3">
+                            <div id="selectedFiles" class="row g-3">
+                                <!-- Selected files will be displayed here -->
                             </div>
-                            <input id="imageFiles" name="files" type="file" class="hidden" accept=".jpg,.jpeg,.png" multiple />
-                        </label>
-                    </div>
-                    <div id="fileList" class="mt-4 space-y-2"></div>
-                </div>
+                        </div>
 
-                <div class="mb-4">
-                    <label class="inline-flex items-center">
-                        <input type="checkbox" name="requestDetailedAnalysis" class="form-checkbox h-5 w-5 text-blue-600" />
-                        <span class="ml-2 text-gray-700">Request Detailed Analysis for All Images</span>
-                    </label>
-                </div>
+                        <div class="alert alert-info">
+                            <h5 class="alert-heading">Batch Processing Information</h5>
+                            <ul class="mb-0">
+                                <li>You can upload multiple images at once</li>
+                                <li>Each image will be analyzed individually</li>
+                                <li>Results will be available in your analysis history</li>
+                                <li>Processing time depends on the number of images</li>
+                            </ul>
+                        </div>
 
-                <div class="flex items-center justify-between">
-                    <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-                        Analyze All Images
-                    </button>
-                    <a asp-action="Upload" class="text-blue-500 hover:text-blue-700">
-                        Switch to Single Upload
-                    </a>
+                        @if (!ViewData.ModelState.IsValid)
+                        {
+                            <div class="alert alert-danger">
+                                <div asp-validation-summary="All" class="mb-0"></div>
+                            </div>
+                        }
+
+                        <div class="text-end">
+                            <a asp-action="Index" class="btn btn-secondary me-2">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Upload and Analyze All</button>
+                        </div>
+                    </form>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 </div>
 
 @section Scripts {
-    <script>
-        document.getElementById('imageFiles').addEventListener('change', function(e) {
-            const fileList = document.getElementById('fileList');
-            fileList.innerHTML = '';
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 
-            for(let i = 0; i < e.target.files.length; i++) {
-                const file = e.target.files[i];
-                const div = document.createElement('div');
-                div.className = 'flex items-center p-2 bg-gray-50 rounded';
-                div.innerHTML = `
-                    <svg class="w-6 h-6 text-gray-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <span>${file.name}</span>
-                    <span class="ml-2 text-sm text-gray-500">(${(file.size / 1024).toFixed(1)} KB)</span>
-                `;
-                fileList.appendChild(div);
-            }
+    <script>
+        $(document).ready(function () {
+            $("#Files").change(function () {
+                const selectedFiles = this.files;
+                const selectedFilesContainer = $("#selectedFiles");
+                selectedFilesContainer.empty();
+
+                for (let i = 0; i < selectedFiles.length; i++) {
+                    const file = selectedFiles[i];
+                    const reader = new FileReader();
+
+                    reader.onload = function (e) {
+                        const col = $('<div class="col-md-4"></div>');
+                        const card = $('<div class="card h-100"></div>');
+                        const img = $('<img src="' + e.target.result + '" class="card-img-top" style="height: 150px; object-fit: cover;">');
+                        const cardBody = $('<div class="card-body"></div>');
+                        const fileName = $('<p class="card-text small text-truncate mb-0">' + file.name + '</p>');
+
+                        cardBody.append(fileName);
+                        card.append(img).append(cardBody);
+                        col.append(card);
+                        selectedFilesContainer.append(col);
+                    }
+
+                    reader.readAsDataURL(file);
+                }
+            });
         });
     </script>
 }

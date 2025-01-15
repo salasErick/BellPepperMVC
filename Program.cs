@@ -16,6 +16,14 @@ builder.Services.AddRazorPages();
 builder.Services.AddScoped<IImageProcessingService, ImageProcessingService>();
 var app = builder.Build();
 
+// Create the directory where temp uploads will reside
+var tempUploadPath = builder.Configuration["PythonSettings:TempUploadPath"];
+if (!string.IsNullOrEmpty(tempUploadPath))
+{
+    var fullPath = Path.GetFullPath(tempUploadPath);
+    Directory.CreateDirectory(fullPath);
+}
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {

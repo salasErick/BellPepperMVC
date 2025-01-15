@@ -1,151 +1,217 @@
-﻿@model BellPepperImage
+﻿@model BellPepperMVC.Controllers.AnalysisDetailsViewModel
+@{
+    ViewData["Title"] = "Analysis Details";
+}
 
-<div class="container mx-auto p-4">
-    <div class="max-w-4xl mx-auto">
-        <div class="bg-white shadow-md rounded-lg overflow-hidden">
-            <div class="p-6">
-                <h2 class="text-2xl font-bold mb-6">Analysis Results</h2>
+<div class="container mt-4">
+    <h1 class="mb-4">Analysis Results</h1>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <!-- Original and Processed Images -->
-                    <div>
-                        <h3 class="text-lg font-semibold mb-2">Original Image</h3>
-                        <img src="@Url.Action("GetImage", new { id = Model.Id, type = "original" })"
-                             alt="Original pepper"
-                             class="w-full rounded-lg shadow-md" />
-                    </div>
-                    @if (Model.HasDetailedAnalysis)
-                    {
-                        <div>
-                            <h3 class="text-lg font-semibold mb-2">Processed Image</h3>
-                            <img src="@Url.Action("GetImage", new { id = Model.Id, type = "processed" })"
-                                 alt="Processed pepper"
-                                 class="w-full rounded-lg shadow-md" />
-                        </div>
-                    }
-                </div>
-
-                <!-- Prediction Results -->
-                <div class="bg-gray-50 rounded-lg p-4 mb-6">
-                    <h3 class="text-lg font-semibold mb-2">Prediction Results</h3>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <p class="text-gray-600">Maturity Level</p>
-                            <p class="text-xl font-bold">@Model.PredictedMaturityLevel</p>
-                        </div>
-                        <div>
-                            <p class="text-gray-600">Confidence</p>
-                            <p class="text-xl font-bold">@(Model.PredictionConfidence.ToString("P"))</p>
-                        </div>
-                    </div>
-                </div>
-
-                @if (Model.HasDetailedAnalysis)
-                {
-                    <!-- Detailed Analysis Section -->
-                    <div class="mb-6">
-                        <h3 class="text-lg font-semibold mb-4">Detailed Analysis</h3>
-
-                        <!-- Feature Values -->
-                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-                            <div class="bg-gray-50 p-3 rounded">
-                                <p class="text-gray-600">Max Value</p>
-                                <p class="font-bold">@Model.MaxValue.ToString("F2")</p>
-                            </div>
-                            <div class="bg-gray-50 p-3 rounded">
-                                <p class="text-gray-600">Min Value</p>
-                                <p class="font-bold">@Model.MinValue.ToString("F2")</p>
-                            </div>
-                            <div class="bg-gray-50 p-3 rounded">
-                                <p class="text-gray-600">Standard Deviation</p>
-                                <p class="font-bold">@Model.StdValue.ToString("F2")</p>
-                            </div>
-                            <div class="bg-gray-50 p-3 rounded">
-                                <p class="text-gray-600">Mean Value</p>
-                                <p class="font-bold">@Model.MeanValue.ToString("F2")</p>
-                            </div>
-                            <div class="bg-gray-50 p-3 rounded">
-                                <p class="text-gray-600">Median Value</p>
-                                <p class="font-bold">@Model.MedianValue.ToString("F2")</p>
-                            </div>
-                        </div>
-
-                        <!-- FFT Spectrum Analysis -->
-                        <div class="space-y-6">
-                            <h4 class="text-lg font-semibold">FFT Spectrum Analysis</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <p class="font-medium mb-2">R Channel Spectrum</p>
-                                    <img src="@Url.Action("GetImage", new { id = Model.Id, type = "spectrumR" })"
-                                         alt="R spectrum"
-                                         class="w-full rounded-lg shadow-md" />
-                                </div>
-                                <div>
-                                    <p class="font-medium mb-2">G Channel Spectrum</p>
-                                    <img src="@Url.Action("GetImage", new { id = Model.Id, type = "spectrumG" })"
-                                         alt="G spectrum"
-                                         class="w-full rounded-lg shadow-md" />
-                                </div>
-                                <div>
-                                    <p class="font-medium mb-2">B Channel Spectrum</p>
-                                    <img src="@Url.Action("GetImage", new { id = Model.Id, type = "spectrumB" })"
-                                         alt="B spectrum"
-                                         class="w-full rounded-lg shadow-md" />
-                                </div>
-                                <div>
-                                    <p class="font-medium mb-2">Combined Spectrum</p>
-                                    <img src="@Url.Action("GetImage", new { id = Model.Id, type = "spectrumCombined" })"
-                                         alt="Combined spectrum"
-                                         class="w-full rounded-lg shadow-md" />
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Additional Analysis -->
-                        <div class="mt-6">
-                            <h4 class="text-lg font-semibold mb-4">Additional Analysis</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div>
-                                    <p class="font-medium mb-2">Inverse FFT</p>
-                                    <img src="@Url.Action("GetImage", new { id = Model.Id, type = "inverseFFT" })"
-                                         alt="Inverse FFT"
-                                         class="w-full rounded-lg shadow-md" />
-                                </div>
-                                <div>
-                                    <p class="font-medium mb-2">Sobel Filter H1</p>
-                                    <img src="@Url.Action("GetImage", new { id = Model.Id, type = "sobelH1" })"
-                                         alt="Sobel H1"
-                                         class="w-full rounded-lg shadow-md" />
-                                </div>
-                                <div>
-                                    <p class="font-medium mb-2">Sobel Filter H2</p>
-                                    <img src="@Url.Action("GetImage", new { id = Model.Id, type = "sobelH2" })"
-                                         alt="Sobel H2"
-                                         class="w-full rounded-lg shadow-md" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                }
-
-                <div class="mt-6 flex justify-between">
-                    <a asp-action="Index" class="text-blue-500 hover:text-blue-700">Back to List</a>
-                    <div>
-                        <a href="#" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2">
-                            Download Report
-                        </a>
-                        <a href="#" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-                            Share Analysis
-                        </a>
-                    </div>
+    <!-- Basic Information -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h2 class="h5 mb-0">Basic Information</h2>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>File Name:</strong> @Model.FileName</p>
+                    <p><strong>Upload Date:</strong> @Model.UploadDate.ToString("g")</p>
+                    <p>
+                        <strong>Maturity Level:</strong>
+                        <span class="badge badge-primary">@Model.PredictedMaturityLevel</span>
+                    </p>
+                    <p>
+                        <strong>Confidence:</strong>
+                        <span class="badge badge-info">@(Model.PredictionConfidence.ToString("P2"))</span>
+                    </p>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Original and Processed Images -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h2 class="h5 mb-0">Images</h2>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <h3 class="h6">Original Image</h3>
+                    <img src="@Model.OriginalImageUrl" alt="Original Image" class="img-fluid rounded shadow-sm">
+                </div>
+                @if (Model.HasDetailedAnalysis)
+                {
+                    <div class="col-md-6 mb-3">
+                        <h3 class="h6">Processed Image</h3>
+                        <img src="@Model.ProcessedImageUrl" alt="Processed Image" class="img-fluid rounded shadow-sm">
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- FFT Spectrum Analysis -->
+    @if (Model.HasSpectrumImages)
+    {
+        <div class="card mb-4">
+            <div class="card-header">
+                <h2 class="h5 mb-0">FFT Spectrum Analysis</h2>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <h3 class="h6">Red Channel Spectrum</h3>
+                        <img src="@Model.SpectrumRUrl" alt="Red Channel Spectrum" class="img-fluid rounded shadow-sm">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <h3 class="h6">Green Channel Spectrum</h3>
+                        <img src="@Model.SpectrumGUrl" alt="Green Channel Spectrum" class="img-fluid rounded shadow-sm">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <h3 class="h6">Blue Channel Spectrum</h3>
+                        <img src="@Model.SpectrumBUrl" alt="Blue Channel Spectrum" class="img-fluid rounded shadow-sm">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <h3 class="h6">Combined RGB Spectrum</h3>
+                        <img src="@Model.SpectrumCombinedUrl" alt="Combined RGB Spectrum" class="img-fluid rounded shadow-sm">
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Inverse FFT -->
+    @if (Model.HasInverseFFT)
+    {
+        <div class="card mb-4">
+            <div class="card-header">
+                <h2 class="h5 mb-0">Inverse FFT</h2>
+            </div>
+            <div class="card-body">
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <img src="@Model.InverseFFTUrl" alt="Inverse FFT" class="img-fluid rounded shadow-sm">
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Sobel Filters -->
+    @if (Model.HasSobelFilters)
+    {
+        <div class="card mb-4">
+            <div class="card-header">
+                <h2 class="h5 mb-0">Edge Detection (Sobel Filters)</h2>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <h3 class="h6">Horizontal Edges (H1)</h3>
+                        <img src="@Model.SobelH1Url" alt="Sobel H1" class="img-fluid rounded shadow-sm">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <h3 class="h6">Vertical Edges (H2)</h3>
+                        <img src="@Model.SobelH2Url" alt="Sobel H2" class="img-fluid rounded shadow-sm">
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Detailed Features -->
+    @if (Model.HasDetailedAnalysis && Model.DetailedFeatures != null)
+    {
+        <div class="card mb-4">
+            <div class="card-header">
+                <h2 class="h5 mb-0">Detailed Analysis Features</h2>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6 class="card-subtitle mb-2 text-muted">Max Value</h6>
+                                <p class="card-text h4">@Model.DetailedFeatures.MaxValue.ToString("F2")</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6 class="card-subtitle mb-2 text-muted">Min Value</h6>
+                                <p class="card-text h4">@Model.DetailedFeatures.MinValue.ToString("F2")</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6 class="card-subtitle mb-2 text-muted">Standard Deviation</h6>
+                                <p class="card-text h4">@Model.DetailedFeatures.StdValue.ToString("F2")</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6 class="card-subtitle mb-2 text-muted">Mean Value</h6>
+                                <p class="card-text h4">@Model.DetailedFeatures.MeanValue.ToString("F2")</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6 class="card-subtitle mb-2 text-muted">Median Value</h6>
+                                <p class="card-text h4">@Model.DetailedFeatures.MedianValue.ToString("F2")</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
 </div>
 
 @section Scripts {
     <script>
-        // Add any JavaScript for interactivity here
+        $(document).ready(function() {
+            // Add click handler for images to show them in a modal
+            $('img').click(function() {
+                var imgSrc = $(this).attr('src');
+                var imgAlt = $(this).attr('alt');
+
+                // Create modal if it doesn't exist
+                if ($('#imageModal').length === 0) {
+                    var modalHtml = `
+                        <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title"></h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <img src="" class="img-fluid" alt="">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`;
+                    $('body').append(modalHtml);
+                }
+
+                // Update modal content
+                $('#imageModal .modal-title').text(imgAlt);
+                $('#imageModal .modal-body img').attr('src', imgSrc);
+                $('#imageModal .modal-body img').attr('alt', imgAlt);
+
+                // Show modal
+                $('#imageModal').modal('show');
+            });
+        });
     </script>
 }

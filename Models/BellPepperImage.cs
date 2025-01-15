@@ -24,7 +24,6 @@ namespace BellPepperMVC.Models
         public DateTime UploadDate { get; set; }
 
         [Column(TypeName = "nvarchar(50)")]
-        [Required]
         public string PredictedMaturityLevel { get; set; }
 
         [Column(TypeName = "decimal(5,2)")]
